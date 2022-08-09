@@ -10,4 +10,6 @@ DEBUG = True
 
 
 # TODO IMPLEMENT DATABASE URL
-SQLALCHEMY_DATABASE_URI = '<Put your local database url>'
+SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:eudo@localhost:5432/fyyur_artistdb'
+
+SQLALCHEMY_TRACK_MODIFICATIONS=False
