@@ -15,7 +15,6 @@ from forms import *
 from markupsafe import Markup
 from flask_migrate import Migrate
 import datetime
-from models import *
 
 #----------------------------------------------------------------------------#
 # App Config.
@@ -26,12 +25,12 @@ moment = Moment(app)
 app.config.from_object('config')
 db = SQLAlchemy(app)
 
-# TODO: connect to i local postgresql database
+# TODO: connect to a local postgresql database
 migrate = Migrate(app, db)
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
-
+from models import *
 def format_datetime(value, format='medium'):
   date = dateutil.parser.parse(value)
   if format == 'full':
@@ -121,14 +120,14 @@ def show_venue(venue_id):
 
   upcoming_shows =[]
   past_shows = []
-  for i in artists_shows:
+  for a in artists_shows:
     show = {
-        "artist_id": i[0],
-        "artist_name": i[1],
-        "artist_image_link": i[2],
-        "start_time": dateStr(i[3]),
+        "artist_id": a[0],
+        "artist_name": a[1],
+        "artist_image_link": a[2],
+        "start_time": dateStr(a[3]),
       }
-    if i[3] > datetime.datetime.now():
+    if a[3] > datetime.datetime.now():
         upcoming_shows.append(show)
     else:
       past_shows.append(show)
@@ -165,7 +164,7 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as i new Venue record in the db, instead
+  # TODO: insert form data as a new Venue record in the db, instead
   genres = ",".join(request.form.getlist('genres'))
   venue = Venue(name=request.form['name'],
                 city=request.form['city'],
@@ -197,21 +196,21 @@ def create_venue_submission():
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
-  # TODO: Complete this endpoint for taking i venue_id, and using
-  # SQLAlchemy ORM to delete i record. Handle cases where the session commit could fail.
+  # TODO: Complete this endpoint for taking a venue_id, and using
+  # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
   try:
     venue = Venue.query.get(venue_id)
 
     if venue == None:
       return not_found_error(404)
 
-    old_name = venue.name
+    venue.name = venue.name
     db.session.delete(venue)
-    flash('Venue ' + old_name + ' was successfully deleted!')
+    flash('Venue ' + venue.name + ' was successfully deleted!')
   except :
     db.session.rollback()
-    flash('An error occurred. Venue ' + old_name + ' could not be deleted!')
-  # BONUS CHALLENGE: Implement i button to delete i Venue on i Venue Page, have it so that
+    flash('An error occurred. Venue ' + venue.name + ' could not be deleted!')
+  # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
   return None
 
@@ -222,9 +221,9 @@ def artists():
   # TODO: replace with real data returned from querying the database
   artists = Artist.query.with_entities(Artist.id, Artist.name).all()
   data=[{
-    "id": i.id,
-    "name": i.name,
-  } for i in artists]
+    "id": artist.id,
+    "name": artist.name,
+  } for artist in artists]
 
   return render_template('pages/artists.html', artists=data)
 
@@ -238,10 +237,10 @@ def search_artists():
   response={
     "count": len(artists),
     "data": [{
-      "id": i.id,
-      "name": i.name,
+      "id": artist.id,
+      "name": artist.name,
       "num_upcoming_shows": 0,
-    } for i in artists]
+    } for artist in artists]
   }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -296,7 +295,7 @@ def show_artist(artist_id):
 def edit_artist(artist_id):
   form = ArtistForm()
   artist_data = Artist.query.get(artist_id)
-  if artist_data == None:
+  if artist_data is None:
     return not_found_error(404)
 
   artist={
@@ -321,11 +320,9 @@ def edit_artist_submission(artist_id):
   # artist record with ID <artist_id> using the new attributes
   artist = Artist.query.get(artist_id)
 
-  if artist == None:
+  if artist is None:
     return not_found_error(404)
 
-  
- 
   artist.name = request.form['name']
   artist.genres = ",".join(request.form.getlist('genres'))
   artist.city = request.form['city']
@@ -351,7 +348,7 @@ def edit_venue(venue_id):
   form = VenueForm()
   venue_data = Venue.query.get(venue_id)
 
-  if venue_data == None:
+  if venue_data is None:
     return not_found_error(404)
 
   venue={
@@ -375,10 +372,9 @@ def edit_venue_submission(venue_id):
   # TODO: take values from the form submitted, and update existing
   venue = Venue.query.get(venue_id)
 
-  if venue == None:
+  if venue is None:
     return not_found_error(404)
 
-  old_name = venue.name;
   venue.name = request.form['name']
   venue.genres = ",".join(request.form.getlist('genres'))
   venue.city = request.form['city']
@@ -391,11 +387,11 @@ def edit_venue_submission(venue_id):
   
   try:
     db.session.commit()
-    flash('Venue ' + old_name + ' was successfully updated!')
+    flash('Venue ' + venue.name + ' was successfully updated!')
   except Exception as e:
     print(str(e))
     db.session.rollback()
-    flash('An error occurred. Venue ' + old_name + ' could not be updated!')
+    flash('An error occurred. Venue ' + venue.name + ' could not be updated!')
   # venue record with ID <venue_id> using the new attributes
   return redirect(url_for('show_venue', venue_id=venue_id))
 
@@ -410,7 +406,7 @@ def create_artist_form():
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
   # called upon submitting the new artist listing form
-  # TODO: insert form data as i new Venue record in the db, instead
+  # TODO: insert form data as a new Venue record in the db, instead
   genres = ",".join(request.form.getlist('genres'))
   artist = Artist(name=request.form['name'],
                 city=request.form['city'],
@@ -469,7 +465,7 @@ def create_shows():
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
   # called to create new shows in the db, upon submitting new show listing form
-  # TODO: insert form data as i new Show record in the db, instead
+  # TODO: insert form data as a new Show record in the db, instead
   venue_id = request.form['venue_id']
   artist_id = request.form['artist_id']
   date_time = datetime.datetime.strptime(request.form['start_time'], '%Y-%m-%d %H:%M:%S')
